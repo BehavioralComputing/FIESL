@@ -15,12 +15,18 @@ FIESL uses only focal-account evidence. Representation generation must not read 
 
 ## Official text encoding
 
-Both datasets use `roberta-base`, maximum token length 128, masked token mean pooling, L2 normalization, and account-level mean pooling over own-tweet vectors.
+Both datasets use [`FacebookAI/roberta-base`](https://huggingface.co/FacebookAI/roberta-base) at pinned revision `e2da8e2f811d1448a5b465c236feacd80ffbac7b`, maximum token length 128, masked token mean pooling, L2 normalization, and account-level mean pooling over own-tweet vectors. The model is loaded either from Hugging Face or from a complete local model directory passed with `--model-path`. No weights are included in the repository.
 
 - TwiBot-20 uses all available own tweets.
 - TwiBot-22 uses the first 20 own tweets in official dataset order and only official supported text fields.
 
 Numeric and linguistic-style statistics must be fitted on the official Train partition only and then frozen for Dev and Test.
+
+## Required official files
+
+TwiBot-20 requires `train.json`, `dev.json`, and `test.json`. Each record supplies `ID`, `label`, `profile`, and `tweet` as defined by the official release. `support.json` is not read.
+
+TwiBot-22 requires `split.csv`, `label.csv`, `user.json`, and `tweet_0.json` through `tweet_8.json`. The preparation code joins tweets only through their documented `author_id`. It never opens `edge.csv`, `hashtag.json`, or `list.json`. A local SQLite staging index is created under `data/processed/TwiBot-22` so the 1M-account preparation remains bounded in memory.
 
 ## Evidence order
 
@@ -55,3 +61,4 @@ The fixed input dimensions are `[783, 773, 1, 4, 4, 4, 768, 9, 15]`. Values outs
 
 Run `python scripts/check_data.py --config configs/fiesl_twibot20.json` or the TwiBot-22 equivalent before training.
 
+Each processed dataset also contains `preparation_manifest.json`. It records the encoder source and resolved revision, the text contract, Train-only preprocessing statistics, official split counts, source-file sizes, the zero-topology access list, and a canonical contract hash. Add `--hash-source-files` during preparation when full raw-file SHA-256 values are required.

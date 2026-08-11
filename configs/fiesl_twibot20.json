@@ -1,6 +1,7 @@
 {
   "method": "FIESL",
   "dataset": "TwiBot-20",
+  "expected_split_counts": {"train": 8278, "dev": 2365, "test": 1183},
   "representation_root": "data/processed/TwiBot-20",
   "output_root": "outputs/TwiBot-20",
   "seeds_file": "configs/seeds.json",
@@ -8,7 +9,10 @@
   "input_dims": [783, 773, 1, 4, 4, 4, 768, 9, 15],
   "quality_dim": 8,
   "text_encoding": {
-    "model": "roberta-base",
+    "huggingface_model": "FacebookAI/roberta-base",
+    "huggingface_url": "https://huggingface.co/FacebookAI/roberta-base",
+    "resolved_revision": "e2da8e2f811d1448a5b465c236feacd80ffbac7b",
+    "local_model_path": null,
     "token_pooling": "masked_mean",
     "embedding_normalization": "l2",
     "tweet_pooling": "mean",

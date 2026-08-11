@@ -19,12 +19,18 @@ docs/
   REPRODUCIBILITY.md
 scripts/
   check_data.py
+  prepare_data.py
+  run_pipeline.py
   run_five_seeds.py
   validate_release.py
 src/fiesl/
   data.py
+  encoding.py
+  features.py
   metrics.py
   model.py
+  prepare.py
+  raw.py
   training.py
 tests/
 ```
@@ -42,7 +48,32 @@ python -m pip install -e '.[test]'
 
 Dataset files are intentionally excluded. Apply for access through the official [TwiBot-20 repository](https://github.com/BunsenFeng/TwiBot-20) and the official [TwiBot-22 repository](https://github.com/LuoUndergradXJTU/TwiBot-22). Put downloaded files under `data/TwiBot-20` and `data/TwiBot-22`, respectively. The TwiBot-22 download is distributed through the [official Google Drive folder](https://drive.google.com/drive/folders/1YwiOUwtl8pCd2GD97Q_WEzwEUtSPoxFs?usp=sharing).
 
-The trainer reads interaction-free representation files from `data/processed/<dataset>/{train,dev,test}.pt`. Their exact tensor contract and text-encoding policy are documented in `docs/DATA.md`.
+No processed tensors or model weights are required from the authors. The repository builds the interaction-free representation from the official source files. Its exact tensor contract and text-encoding policy are documented in `docs/DATA.md`.
+
+## Complete pipeline
+
+The default commands download `FacebookAI/roberta-base` from [Hugging Face](https://huggingface.co/FacebookAI/roberta-base), encode the official raw data, fit preprocessing on Train only, create the nine-slot representation, and train the published default seed:
+
+```bash
+python scripts/run_pipeline.py \
+  --config configs/fiesl_twibot20.json \
+  --raw-root data/TwiBot-20 \
+  --hf-cache-dir models/huggingface
+
+python scripts/run_pipeline.py \
+  --config configs/fiesl_twibot22.json \
+  --raw-root data/TwiBot-22 \
+  --hf-cache-dir models/huggingface
+```
+
+Add `--five-seeds` to run all five paper seeds. For an offline model copy, replace `--hf-cache-dir models/huggingface` with `--model-path /absolute/path/to/roberta-base`. Model files stay outside version control.
+
+Preparation can also be run separately:
+
+```bash
+python scripts/prepare_data.py --config configs/fiesl_twibot20.json --raw-root data/TwiBot-20
+python scripts/check_data.py --config configs/fiesl_twibot20.json
+```
 
 ## Main experiments
 

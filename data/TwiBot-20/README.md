@@ -1,2 +1,1 @@
-Download TwiBot-20 from https://github.com/BunsenFeng/TwiBot-20 and place the official files in this directory. Do not commit dataset files.
-
+Download TwiBot-20 from https://github.com/BunsenFeng/TwiBot-20 and place `train.json`, `dev.json`, and `test.json` in this directory. The pipeline does not read `support.json`. Do not commit dataset files.

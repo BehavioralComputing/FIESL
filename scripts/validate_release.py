@@ -17,6 +17,10 @@ EXPECTED_DEFAULT_SEEDS = {
     "fiesl_twibot20.json": 375449128,
     "fiesl_twibot22.json": 545955441,
 }
+EXPECTED_SPLIT_COUNTS = {
+    "fiesl_twibot20.json": {"train": 8278, "dev": 2365, "test": 1183},
+    "fiesl_twibot22.json": {"train": 700000, "dev": 200000, "test": 100000},
+}
 
 
 def validate_names() -> None:
@@ -55,8 +59,19 @@ def validate_configs() -> None:
             raise ValueError("public method name is not FIESL")
         if config["default_seed"] != EXPECTED_DEFAULT_SEEDS[name]:
             raise ValueError("dataset default seed changed")
+        if config["expected_split_counts"] != EXPECTED_SPLIT_COUNTS[name]:
+            raise ValueError("official split counts changed")
         if config["default_seed"] not in seeds:
             raise ValueError("dataset default seed is outside the paper seed list")
+        encoding = config["text_encoding"]
+        if encoding["huggingface_model"] != "FacebookAI/roberta-base":
+            raise ValueError("official encoder changed")
+        if encoding["huggingface_url"] != "https://huggingface.co/FacebookAI/roberta-base":
+            raise ValueError("official encoder URL changed")
+        if encoding["resolved_revision"] != "e2da8e2f811d1448a5b465c236feacd80ffbac7b":
+            raise ValueError("official encoder revision changed")
+        if encoding["max_length"] != 128:
+            raise ValueError("official maximum text length changed")
         training = config["training"]
         if training["selection_split"] != "dev" or training["selection_metric"] != "dev_bot_f1":
             raise ValueError("Dev Bot-F1 selection contract changed")
@@ -64,6 +79,20 @@ def validate_configs() -> None:
             raise ValueError("per-epoch Test observation is disabled")
         if training["test_used_for_selection"] or training["test_oracle_selection"]:
             raise ValueError("Test selection is enabled")
+
+
+def validate_pipeline_files() -> None:
+    required = (
+        "scripts/prepare_data.py",
+        "scripts/run_pipeline.py",
+        "src/fiesl/encoding.py",
+        "src/fiesl/features.py",
+        "src/fiesl/prepare.py",
+        "src/fiesl/raw.py",
+    )
+    missing = [name for name in required if not (ROOT / name).is_file()]
+    if missing:
+        raise ValueError(f"from-source pipeline files are missing: {missing}")
 
 
 def validate_model() -> None:
@@ -97,6 +126,7 @@ def main() -> None:
     validate_names()
     validate_comments()
     validate_configs()
+    validate_pipeline_files()
     validate_model()
     print("release validation passed")
 

@@ -2,6 +2,8 @@ data/TwiBot-20/*
 data/TwiBot-22/*
 data/processed/*
 outputs/*
+models/*
+.cache/*
 *.pt
 *.pth
 *.bin
@@ -14,4 +16,4 @@ __pycache__/
 !data/TwiBot-20/README.md
 !data/TwiBot-22/README.md
 !data/processed/README.md
-
+!models/README.md

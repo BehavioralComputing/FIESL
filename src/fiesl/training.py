@@ -125,6 +125,12 @@ def run(config_path: Path, seed: int | None = None, output_override: Path | None
         raise ValueError("seed is not in the fixed paper seed list")
     set_seed(seed)
     representation_root = resolve_path(project_root, config["representation_root"])
+    preparation_path = representation_root / "preparation_manifest.json"
+    if not preparation_path.is_file():
+        raise FileNotFoundError(preparation_path)
+    preparation = json.loads(preparation_path.read_text(encoding="utf-8"))
+    if preparation.get("status") != "PASS" or not preparation.get("contract_sha256"):
+        raise ValueError("representation preparation is not a traceable PASS artifact")
     output_root = output_override or resolve_path(project_root, config["output_root"])
     run_id = f"FIESL_{config['dataset'].replace('-', '')}_seed{seed}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
     run_root = output_root / run_id
@@ -136,6 +142,7 @@ def run(config_path: Path, seed: int | None = None, output_override: Path | None
         "dataset": config["dataset"],
         "seed": seed,
         "config_sha256": config_hash,
+        "preparation_contract_sha256": preparation["contract_sha256"],
         "selection_split": "dev",
         "selection_metric": "dev_bot_f1",
         "test_monitoring_per_epoch": True,

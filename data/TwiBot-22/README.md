@@ -1,2 +1,1 @@
-Apply for TwiBot-22 through https://github.com/LuoUndergradXJTU/TwiBot-22 and place the official files in this directory. Do not commit dataset files.
-
+Apply for TwiBot-22 through https://github.com/LuoUndergradXJTU/TwiBot-22 and place `split.csv`, `label.csv`, `user.json`, and `tweet_0.json` through `tweet_8.json` in this directory. The pipeline never reads `edge.csv`, `hashtag.json`, or `list.json`. Do not commit dataset files.
