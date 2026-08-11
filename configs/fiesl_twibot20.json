@@ -1,0 +1,46 @@
+{
+  "method": "FIESL",
+  "dataset": "TwiBot-20",
+  "representation_root": "data/processed/TwiBot-20",
+  "output_root": "outputs/TwiBot-20",
+  "seeds_file": "configs/seeds.json",
+  "default_seed": 375449128,
+  "input_dims": [783, 773, 1, 4, 4, 4, 768, 9, 15],
+  "quality_dim": 8,
+  "text_encoding": {
+    "model": "roberta-base",
+    "token_pooling": "masked_mean",
+    "embedding_normalization": "l2",
+    "tweet_pooling": "mean",
+    "max_length": 128,
+    "tweet_limit": null,
+    "scope": "all_own_tweets"
+  },
+  "model": {
+    "hidden_dim": 128,
+    "encoder_inner_dim": 256,
+    "pair_hidden_dim": 128,
+    "aggregation_hidden_dim": 256,
+    "encoder_dropout": 0.1,
+    "dropout": 0.4
+  },
+  "training": {
+    "batch_size": 128,
+    "evaluation_batch_size": 128,
+    "learning_rate": 0.0003,
+    "weight_decay": 0.0001,
+    "max_epochs": 55,
+    "minimum_epochs": 38,
+    "patience": 17,
+    "gradient_clip_norm": 5.0,
+    "class_weighting": "inverse_frequency",
+    "selection_split": "dev",
+    "selection_metric": "dev_bot_f1",
+    "classification_threshold": 0.5,
+    "test_monitoring_per_epoch": true,
+    "test_used_for_selection": false,
+    "test_oracle_selection": false,
+    "num_workers": 0,
+    "device": "cuda"
+  }
+}

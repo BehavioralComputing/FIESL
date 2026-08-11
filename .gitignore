@@ -1,0 +1,17 @@
+data/TwiBot-20/*
+data/TwiBot-22/*
+data/processed/*
+outputs/*
+*.pt
+*.pth
+*.bin
+*.mmap
+__pycache__/
+.pytest_cache/
+.venv/
+*.egg-info/
+.DS_Store
+!data/TwiBot-20/README.md
+!data/TwiBot-22/README.md
+!data/processed/README.md
+
