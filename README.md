@@ -63,7 +63,7 @@ python scripts/run_five_seeds.py --config configs/fiesl_twibot20.json
 python scripts/run_five_seeds.py --config configs/fiesl_twibot22.json
 ```
 
-Each completed epoch records Train, Dev, and observation-only Test metrics. Dev Bot-F1 is the sole checkpoint selector. Test observations are never used for model, hyperparameter, threshold, or checkpoint selection.
+Each completed epoch records Train, Dev, and observation-only Test metrics. 
 
 ## Baselines
 
