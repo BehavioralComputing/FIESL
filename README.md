@@ -19,6 +19,7 @@ docs/
   REPRODUCIBILITY.md
 scripts/
   check_data.py
+  map_raw_fields_to_units.py
   prepare_data.py
   run_pipeline.py
   run_five_seeds.py
@@ -95,6 +96,18 @@ python scripts/run_five_seeds.py --config configs/fiesl_twibot22.json
 ```
 
 Each completed epoch records Train, Dev, and observation-only Test metrics. 
+
+## LLM-assisted unit mapping
+
+`scripts/map_raw_fields_to_units.py` is a standalone provenance and replay script. It contains the TwiBot-20 and TwiBot-22 field-name schemas, the constrained LLM prompt, the frozen nine-unit response, output validation, and the resulting raw-field-to-unit mapping. It receives schema metadata only and never reads dataset records, labels, graph files, metrics, or training outputs.
+
+The script is not part of the training call path. The published training implementation directly uses the frozen 9-by-10 membership matrix in `src/fiesl/model.py`; it does not call an LLM or require an API key.
+
+```bash
+python scripts/map_raw_fields_to_units.py --print-prompt
+python scripts/map_raw_fields_to_units.py --output frozen_unit_mapping.json
+python scripts/map_raw_fields_to_units.py --response-file candidate.json --output candidate_mapping.json
+```
 
 ## Baselines
 
