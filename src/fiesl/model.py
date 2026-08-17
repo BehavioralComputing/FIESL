@@ -4,21 +4,10 @@ import torch
 from torch import nn
 
 from fiesl.data import EvidenceBatch
+from fiesl.ontology import PRIMITIVE_ORDER, SOURCE_SLOT, unit_membership
 
 
-PRIMITIVE_NAMES = (
-    "identity_lexical",
-    "identity_metadata",
-    "profile_text",
-    "profile_completeness",
-    "popularity",
-    "social_ratio",
-    "activity_intensity",
-    "content_semantics",
-    "content_diversity",
-    "linguistic_style",
-)
-SOURCE_SLOT = (0, 0, 1, 1, 3, 4, 5, 6, 7, 8)
+PRIMITIVE_NAMES = PRIMITIVE_ORDER
 TEXT_PRIMITIVES = (0, 2, 7)
 
 
@@ -156,17 +145,7 @@ class FIESL(nn.Module):
             encoder_inner_dim,
             encoder_dropout,
         )
-        membership = torch.zeros((9, 10), dtype=torch.float32)
-        membership[0, 0] = 1
-        membership[1, 2] = 1
-        membership[2, 1] = 1
-        membership[2, 3] = 1
-        membership[3, 4] = 1
-        membership[4, 5] = 1
-        membership[5, 6] = 1
-        membership[6, 7] = 1
-        membership[7, 8] = 1
-        membership[8, 9] = 1
+        membership = unit_membership()
         self.register_buffer("unit_membership", membership)
         pair_left, pair_right = torch.triu_indices(9, 9, offset=1)
         incidence = torch.zeros((9, pair_left.numel()), dtype=torch.bool)
@@ -233,4 +212,3 @@ class FIESL(nn.Module):
         structural = self.structural_readout(enhanced, unit_mask)
         account = self.output_norm(semantic + self.structural_scale * self.structural_projection(structural))
         return self.classifier(account)
-

@@ -29,6 +29,7 @@ src/fiesl/
   features.py
   metrics.py
   model.py
+  ontology.py
   prepare.py
   raw.py
   training.py
@@ -95,6 +96,24 @@ python scripts/run_five_seeds.py --config configs/fiesl_twibot22.json
 ```
 
 Each completed epoch records Train, Dev, and observation-only Test metrics. 
+
+## Frozen LLM ontology
+
+`src/fiesl/ontology.py` is the complete, self-contained path from the official raw fields to FIESL's nine semantic evidence units. It contains the TwiBot-20 and TwiBot-22 raw-schema profiles, the ten permitted normalized primitives, the constrained one-shot LLM schema prompt, the frozen nine-unit output, hard audits, hashes, and the runtime membership matrix. It never sends account records, labels, graph files, validation metrics, or test values to an LLM. Every training run records the frozen ontology ID and hash in its manifest.
+
+Inspect the exact prompt and cross-dataset raw-field metadata without calling an external service:
+
+```bash
+PYTHONPATH=src python -m fiesl.ontology --print-prompt
+```
+
+Audit an externally produced JSON candidate without changing the frozen paper schema:
+
+```bash
+PYTHONPATH=src python -m fiesl.ontology --response-file candidate.json --output candidate_manifest.json
+```
+
+An optional compatible chat-completions call is available only when `FIESL_LLM_ENDPOINT`, `FIESL_LLM_MODEL`, and `FIESL_LLM_API_KEY` are explicitly set. Its output is always marked `candidate_only`; it never overwrites the frozen schema used by training.
 
 ## Baselines
 

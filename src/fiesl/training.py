@@ -14,6 +14,7 @@ from torch import nn
 from fiesl.data import EvidenceBatch, load_split, make_loader
 from fiesl.metrics import binary_metrics
 from fiesl.model import FIESL
+from fiesl.ontology import compile_ontology
 
 
 def utc_now() -> str:
@@ -124,6 +125,7 @@ def run(config_path: Path, seed: int | None = None, output_override: Path | None
     if seed not in allowed_seeds:
         raise ValueError("seed is not in the fixed paper seed list")
     set_seed(seed)
+    ontology = compile_ontology()
     representation_root = resolve_path(project_root, config["representation_root"])
     preparation_path = representation_root / "preparation_manifest.json"
     if not preparation_path.is_file():
@@ -143,6 +145,9 @@ def run(config_path: Path, seed: int | None = None, output_override: Path | None
         "seed": seed,
         "config_sha256": config_hash,
         "preparation_contract_sha256": preparation["contract_sha256"],
+        "evidence_ontology_id": ontology["evidence_ontology_id"],
+        "evidence_ontology_sha256": ontology["ontology_sha256"],
+        "evidence_ontology_audit": ontology["audit"]["status"],
         "selection_split": "dev",
         "selection_metric": "dev_bot_f1",
         "test_monitoring_per_epoch": True,

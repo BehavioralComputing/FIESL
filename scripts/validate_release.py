@@ -9,6 +9,7 @@ import torch
 
 from fiesl.data import EvidenceBatch
 from fiesl.model import FIESL
+from fiesl.ontology import compile_ontology, unit_membership
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -89,6 +90,7 @@ def validate_pipeline_files() -> None:
         "src/fiesl/features.py",
         "src/fiesl/prepare.py",
         "src/fiesl/raw.py",
+        "src/fiesl/ontology.py",
     )
     missing = [name for name in required if not (ROOT / name).is_file()]
     if missing:
@@ -122,11 +124,21 @@ def validate_model() -> None:
         raise ValueError("internal relation contract changed")
 
 
+def validate_ontology() -> None:
+    manifest = compile_ontology()
+    membership = unit_membership(manifest)
+    if manifest["audit"]["status"] != "PASS" or membership.shape != (9, 10):
+        raise ValueError("frozen LLM ontology contract changed")
+    if membership.sum(dim=0).tolist() != [1.0] * 10:
+        raise ValueError("ontology primitive coverage changed")
+
+
 def main() -> None:
     validate_names()
     validate_comments()
     validate_configs()
     validate_pipeline_files()
+    validate_ontology()
     validate_model()
     print("release validation passed")
 
