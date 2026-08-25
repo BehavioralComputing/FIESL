@@ -4,7 +4,7 @@
   "compiler_provenance": {
     "role": "dataset-level raw-field and evidence-unit schema compiler",
     "provider": "OpenAI",
-    "model_family": "GPT-5 Codex",
+    "model_family": "GPT-5.5",
     "runtime_date": "2026-07-20",
     "backend_build": "not exposed by runtime",
     "generation_count": 1,
