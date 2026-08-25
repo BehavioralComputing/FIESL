@@ -1,6 +1,6 @@
 # FIESL
 
-This repository contains the minimal implementation used for the main experiments of Fine-grained Internal Evidence Structure Learning (FIESL). FIESL performs account-local social bot detection without reading account-to-account edges during training or inference.
+This repository contains the experiments of Fine-grained Internal Evidence Structure Learning (FIESL). FIESL performs account-local social bot detection without reading account-to-account edges during training or inference.
 
 ## Repository layout
 
