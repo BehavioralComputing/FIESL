@@ -6,6 +6,7 @@ This repository contains the minimal implementation used for the main experiment
 
 ```text
 configs/
+  frozen_schema_compilation.json
   fiesl_twibot20.json
   fiesl_twibot22.json
   seeds.json
@@ -99,14 +100,37 @@ Each completed epoch records Train, Dev, and observation-only Test metrics.
 
 ## LLM-assisted unit mapping
 
-`scripts/map_raw_fields_to_units.py` is a standalone provenance and replay script. It contains the TwiBot-20 and TwiBot-22 field-name schemas, the constrained LLM prompt, the frozen nine-unit response, output validation, and the resulting raw-field-to-unit mapping. It receives schema metadata only and never reads dataset records, labels, graph files, metrics, or training outputs.
+`scripts/map_raw_fields_to_units.py` is a standalone provenance and replay
+script. Given only the TwiBot-20 and TwiBot-22 raw-field schemas, its constrained
+LLM prompt jointly aligns dataset-specific fields to a shared primitive
+vocabulary and organizes those primitives into nine semantic evidence units.
+The frozen response, including both field-to-primitive and primitive-to-unit
+mappings, is stored in `configs/frozen_schema_compilation.json`. Validation
+requires complete raw-field coverage, allowed primitive use, and exactly-once
+primitive membership across the nine units. The compiler never reads dataset
+records, labels, graph files, metrics, or training outputs.
 
-The script is not part of the training call path. The published training implementation directly uses the frozen 9-by-10 membership matrix in `src/fiesl/model.py`; it does not call an LLM or require an API key.
+The script is a schema-generation demonstration and is not part of the training
+call path. The published training implementation directly uses the equivalent
+frozen 9-by-10 membership matrix in `src/fiesl/model.py`; it does not call an
+LLM, regenerate a schema, or require an API key. Release validation checks that
+the replayed frozen compiler output remains exactly equal to this training
+matrix.
 
 ```bash
 python scripts/map_raw_fields_to_units.py --print-prompt
 python scripts/map_raw_fields_to_units.py --output frozen_unit_mapping.json
 python scripts/map_raw_fields_to_units.py --response-file candidate.json --output candidate_mapping.json
+```
+
+An optional live call uses an OpenAI-compatible chat-completions endpoint and
+is intended only to demonstrate the constrained compilation interface:
+
+```bash
+FIESL_LLM_ENDPOINT=... \
+FIESL_LLM_MODEL=... \
+FIESL_LLM_API_KEY=... \
+python scripts/map_raw_fields_to_units.py --call-agent --output candidate_mapping.json
 ```
 
 ## Baselines

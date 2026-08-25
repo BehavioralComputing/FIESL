@@ -31,3 +31,18 @@ Every run writes:
 - `metrics.json`
 
 The five-seed paper result is the arithmetic mean and sample standard deviation over the five completed run directories. Do not replace failed seeds or select seeds using Test performance.
+
+## Frozen schema compilation
+
+The optional LLM interface in `scripts/map_raw_fields_to_units.py` is isolated
+from preprocessing, training, checkpoint selection, and inference. It receives
+raw-field names and schema descriptions only, and demonstrates a constrained
+two-level compilation from dataset-specific fields to shared primitives and
+from primitives to nine semantic evidence units.
+
+The exact accepted response and its compiler provenance are frozen in
+`configs/frozen_schema_compilation.json`. Normal reproduction replays this file
+without an API call. Training does not execute the compiler; it uses the fixed
+9-by-10 membership matrix already stored in `src/fiesl/model.py`. The release
+validator rejects any disagreement between the replayed compiler output and
+the training matrix.

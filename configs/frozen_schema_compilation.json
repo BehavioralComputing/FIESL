@@ -1,0 +1,61 @@
+{
+  "schema_name": "fiesl_frozen_schema_compilation",
+  "schema_version": 1,
+  "compiler_provenance": {
+    "role": "dataset-level raw-field and evidence-unit schema compiler",
+    "provider": "OpenAI",
+    "model_family": "GPT-5 Codex",
+    "runtime_date": "2026-07-20",
+    "backend_build": "not exposed by runtime",
+    "generation_count": 1,
+    "account_level_calls": 0,
+    "regeneration_after_metrics": false
+  },
+  "response": {
+    "field_alignments": {
+      "TwiBot-20": [
+        {"field": "profile.name", "primitives": ["identity_lexical"]},
+        {"field": "profile.screen_name", "primitives": ["identity_lexical"]},
+        {"field": "profile.protected", "primitives": ["identity_metadata"]},
+        {"field": "profile.verified", "primitives": ["identity_metadata"]},
+        {"field": "profile.has_extended_profile", "primitives": ["identity_metadata"]},
+        {"field": "profile.default_profile", "primitives": ["identity_metadata"]},
+        {"field": "profile.default_profile_image", "primitives": ["identity_metadata"]},
+        {"field": "profile.description", "primitives": ["profile_text", "profile_completeness"]},
+        {"field": "profile.location", "primitives": ["profile_text", "profile_completeness"]},
+        {"field": "profile.url", "primitives": ["profile_text", "profile_completeness"]},
+        {"field": "profile.followers_count", "primitives": ["popularity", "social_ratio"]},
+        {"field": "profile.friends_count", "primitives": ["social_ratio"]},
+        {"field": "profile.listed_count", "primitives": ["popularity"]},
+        {"field": "profile.statuses_count", "primitives": ["activity_intensity"]},
+        {"field": "profile.favourites_count", "primitives": ["activity_intensity"]},
+        {"field": "tweet[]", "primitives": ["content_semantics", "content_diversity", "linguistic_style"]}
+      ],
+      "TwiBot-22": [
+        {"field": "user.name", "primitives": ["identity_lexical"]},
+        {"field": "user.username", "primitives": ["identity_lexical"]},
+        {"field": "user.protected", "primitives": ["identity_metadata"]},
+        {"field": "user.verified", "primitives": ["identity_metadata"]},
+        {"field": "user.description", "primitives": ["profile_text", "profile_completeness"]},
+        {"field": "user.location", "primitives": ["profile_text", "profile_completeness"]},
+        {"field": "user.url", "primitives": ["profile_text", "profile_completeness"]},
+        {"field": "user.public_metrics.followers_count", "primitives": ["popularity", "social_ratio"]},
+        {"field": "user.public_metrics.following_count", "primitives": ["social_ratio"]},
+        {"field": "user.public_metrics.listed_count", "primitives": ["popularity"]},
+        {"field": "user.public_metrics.tweet_count", "primitives": ["activity_intensity"]},
+        {"field": "tweet_*.json.text", "primitives": ["content_semantics", "content_diversity", "linguistic_style"]}
+      ]
+    },
+    "units": [
+      {"id": "identity_lexical", "name": "Identity Lexical", "definition": "Lexical and character-form identity presentation.", "primitives": ["identity_lexical"]},
+      {"id": "profile_text", "name": "Profile Text", "definition": "Free-text profile self-description and its length form.", "primitives": ["profile_text"]},
+      {"id": "presentation_metadata", "name": "Presentation Metadata", "definition": "Identity flags and profile completeness indicators.", "primitives": ["identity_metadata", "profile_completeness"]},
+      {"id": "popularity", "name": "Popularity", "definition": "Follower and list-based social standing.", "primitives": ["popularity"]},
+      {"id": "social_ratio", "name": "Social Ratio", "definition": "Follower and friend balance distinct from absolute standing.", "primitives": ["social_ratio"]},
+      {"id": "activity", "name": "Activity", "definition": "Account-local activity intensity.", "primitives": ["activity_intensity"]},
+      {"id": "content_semantics", "name": "Content Semantics", "definition": "Semantic summary of own tweets.", "primitives": ["content_semantics"]},
+      {"id": "content_diversity", "name": "Content Diversity", "definition": "Dispersion and repetition of own tweets.", "primitives": ["content_diversity"]},
+      {"id": "linguistic_style", "name": "Linguistic Style", "definition": "Label-free linguistic form of own tweets.", "primitives": ["linguistic_style"]}
+    ]
+  }
+}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import runpy
 import tokenize
 from pathlib import Path
 
@@ -27,7 +28,6 @@ def validate_names() -> None:
     forbidden = [
         "".join(("c", "1", "rr")),
         "".join(("c", "1", "-", "rr")),
-        "".join(("cod", "ex")),
         "".join(("chat", "gpt")),
         "".join(("generated", " by ai")),
     ]
@@ -85,6 +85,8 @@ def validate_pipeline_files() -> None:
     required = (
         "scripts/prepare_data.py",
         "scripts/run_pipeline.py",
+        "scripts/map_raw_fields_to_units.py",
+        "configs/frozen_schema_compilation.json",
         "src/fiesl/encoding.py",
         "src/fiesl/features.py",
         "src/fiesl/prepare.py",
@@ -122,12 +124,25 @@ def validate_model() -> None:
         raise ValueError("internal relation contract changed")
 
 
+def validate_frozen_schema_compilation() -> None:
+    namespace = runpy.run_path(str(ROOT / "scripts/map_raw_fields_to_units.py"))
+    response, provenance = namespace["load_frozen_compilation"]()
+    compiled = namespace["compile_mapping"](response, provenance)
+    if compiled["audit"]["status"] != "PASS":
+        raise ValueError("frozen schema compilation audit failed")
+    model = FIESL([783, 773, 1, 4, 4, 4, 768, 9, 15], 8)
+    expected = torch.tensor(compiled["training_membership"], dtype=torch.float32)
+    if not torch.equal(model.unit_membership.cpu(), expected):
+        raise ValueError("frozen compiler output differs from the training membership")
+
+
 def main() -> None:
     validate_names()
     validate_comments()
     validate_configs()
     validate_pipeline_files()
     validate_model()
+    validate_frozen_schema_compilation()
     print("release validation passed")
 
 
