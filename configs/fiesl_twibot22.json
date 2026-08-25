@@ -30,13 +30,13 @@
     "dropout": 0.4
   },
   "training": {
-    "batch_size": 128,
-    "evaluation_batch_size": 128,
+    "batch_size": 1024,
+    "evaluation_batch_size": 4096,
     "learning_rate": 0.0003,
     "weight_decay": 0.0001,
-    "max_epochs": 55,
-    "minimum_epochs": 38,
-    "patience": 17,
+    "max_epochs": 25,
+    "minimum_epochs": 15,
+    "patience": 7,
     "gradient_clip_norm": 5.0,
     "class_weighting": "inverse_frequency",
     "selection_split": "dev",
@@ -46,6 +46,11 @@
     "test_used_for_selection": false,
     "test_oracle_selection": false,
     "num_workers": 0,
+    "sharded": {
+      "coalesce_across_shards": true,
+      "prefetch_shards": true,
+      "pin_memory": true
+    },
     "device": "cuda"
   }
 }

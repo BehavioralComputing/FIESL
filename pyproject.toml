@@ -8,6 +8,7 @@ version = "1.0.0"
 description = "Fine-grained Internal Evidence Structure Learning for social bot detection"
 requires-python = ">=3.10"
 dependencies = [
+  "numpy>=1.24",
   "torch>=2.1",
   "sympy>=1.13",
   "transformers>=4.40,<5",

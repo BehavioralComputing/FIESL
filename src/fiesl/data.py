@@ -17,7 +17,7 @@ class EvidenceBatch:
     availability_mask: torch.Tensor
     quality_features: torch.Tensor
 
-    def validate(self) -> "EvidenceBatch":
+    def validate(self, check_values: bool = True) -> "EvidenceBatch":
         if self.typed_inputs.ndim != 3 or self.typed_inputs.shape[1] != 9:
             raise ValueError("typed_inputs must have shape [N, 9, F]")
         count, slots, width = self.typed_inputs.shape
@@ -39,19 +39,20 @@ class EvidenceBatch:
             raise TypeError("availability_mask must be bool")
         if torch.any(self.input_dims <= 0) or torch.any(self.input_dims > width):
             raise ValueError("input_dims contains an invalid width")
-        if not torch.isfinite(self.typed_inputs).all() or not torch.isfinite(self.quality_features).all():
-            raise ValueError("input tensors contain non-finite values")
-        if torch.any(self.typed_inputs[~self.availability_mask] != 0):
-            raise ValueError("unavailable evidence inputs must be zero")
-        if torch.any(self.quality_features[~self.availability_mask] != 0):
-            raise ValueError("unavailable evidence quality must be zero")
-        if set(self.labels.tolist()) - {0, 1}:
-            raise ValueError("labels must be binary")
-        if len(set(self.account_ids)) != count:
-            raise ValueError("account IDs must be unique within a split")
-        dimensions = torch.arange(width).unsqueeze(0) >= self.input_dims.unsqueeze(1)
-        if torch.any(self.typed_inputs.masked_select(dimensions.unsqueeze(0)) != 0):
-            raise ValueError("values outside declared slot widths must be zero")
+        if check_values:
+            if not torch.isfinite(self.typed_inputs).all() or not torch.isfinite(self.quality_features).all():
+                raise ValueError("input tensors contain non-finite values")
+            if torch.any(self.typed_inputs[~self.availability_mask] != 0):
+                raise ValueError("unavailable evidence inputs must be zero")
+            if torch.any(self.quality_features[~self.availability_mask] != 0):
+                raise ValueError("unavailable evidence quality must be zero")
+            if set(self.labels.tolist()) - {0, 1}:
+                raise ValueError("labels must be binary")
+            if len(set(self.account_ids)) != count:
+                raise ValueError("account IDs must be unique within a split")
+            dimensions = torch.arange(width).unsqueeze(0) >= self.input_dims.unsqueeze(1)
+            if torch.any(self.typed_inputs.masked_select(dimensions.unsqueeze(0)) != 0):
+                raise ValueError("values outside declared slot widths must be zero")
         return self
 
     def select(self, indices: torch.Tensor | list[int]) -> "EvidenceBatch":
@@ -79,7 +80,7 @@ class EvidenceBatch:
 
 class EvidenceSplit(Dataset[int]):
     def __init__(self, batch: EvidenceBatch) -> None:
-        self.batch = batch.validate()
+        self.batch = batch.validate(check_values=False)
 
     def __len__(self) -> int:
         return len(self.batch.account_ids)
@@ -94,7 +95,7 @@ class EvidenceSplit(Dataset[int]):
 def load_split(path: Path, expected_input_dims: list[int], quality_dim: int) -> EvidenceBatch:
     if not path.is_file():
         raise FileNotFoundError(path)
-    payload: dict[str, Any] = torch.load(path, map_location="cpu", weights_only=False)
+    payload: dict[str, Any] = torch.load(path, map_location="cpu", weights_only=False, mmap=True)
     required = {
         "account_ids",
         "labels",
@@ -112,7 +113,7 @@ def load_split(path: Path, expected_input_dims: list[int], quality_dim: int) -> 
         input_dims=payload["input_dims"],
         availability_mask=payload["availability_mask"],
         quality_features=payload["quality_features"],
-    ).validate()
+    ).validate(check_values=False)
     if batch.input_dims.tolist() != [int(value) for value in expected_input_dims]:
         raise ValueError(f"{path} input dimensions differ from the configuration")
     if batch.quality_features.shape[2] != int(quality_dim):
@@ -138,4 +139,3 @@ def make_loader(
         generator=generator,
         pin_memory=torch.cuda.is_available(),
     )
-

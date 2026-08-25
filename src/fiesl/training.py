@@ -14,6 +14,8 @@ from torch import nn
 from fiesl.data import EvidenceBatch, load_split, make_loader
 from fiesl.metrics import binary_metrics
 from fiesl.model import FIESL
+from fiesl.official_overlay import OfficialRoBERTaBatches, OfficialRoBERTaOverlay
+from fiesl.sharded import ShardedEvidenceBatches
 
 
 def utc_now() -> str:
@@ -154,35 +156,50 @@ def run(config_path: Path, seed: int | None = None, output_override: Path | None
     write_json(run_root / "status.json", {"status": "RUNNING", "run_id": run_id, "updated_at": utc_now()})
     input_dims = config["input_dims"]
     quality_dim = config["quality_dim"]
-    train_batch = load_split(representation_root / "train.pt", input_dims, quality_dim)
-    dev_batch = load_split(representation_root / "dev.pt", input_dims, quality_dim)
-    test_batch = load_split(representation_root / "test.pt", input_dims, quality_dim)
-    train_loader = make_loader(
-        train_batch,
-        training["batch_size"],
-        True,
-        seed,
-        training["num_workers"],
-    )
-    dev_loader = make_loader(
-        dev_batch,
-        training["evaluation_batch_size"],
-        False,
-        seed,
-        training["num_workers"],
-    )
-    test_loader = make_loader(
-        test_batch,
-        training["evaluation_batch_size"],
-        False,
-        seed,
-        training["num_workers"],
-    )
+    representation_manifest_path = representation_root / "representation_manifest.json"
+    representation_manifest = json.loads(representation_manifest_path.read_text(encoding="utf-8")) if representation_manifest_path.is_file() else None
+    if representation_manifest is not None and str(representation_manifest.get("storage_layout", "")).startswith("sharded_"):
+        expected_counts = {key: int(value) for key, value in config["expected_split_counts"].items()}
+        if representation_manifest.get("split_counts") != expected_counts or representation_manifest.get("interaction_free_check") != "PASS":
+            raise ValueError("sharded representation contract differs from the configuration")
+        options = training.get("sharded", {})
+        loaders = {}
+        for split in ("train", "dev", "test"):
+            entries = representation_manifest["split_shards"][split]
+            if sum(int(value["records"]) for value in entries) != expected_counts[split]:
+                raise ValueError(f"{split} shard rows differ from the official split")
+            loaders[split] = ShardedEvidenceBatches(
+                representation_root,
+                entries,
+                training["batch_size"] if split == "train" else training["evaluation_batch_size"],
+                seed,
+                split == "train",
+                bool(options.get("coalesce_across_shards", True)),
+                bool(options.get("prefetch_shards", True)),
+                bool(options.get("pin_memory", True)) and torch.cuda.is_available(),
+            )
+        overlay = OfficialRoBERTaOverlay(representation_root)
+        train_loader = OfficialRoBERTaBatches(loaders["train"], overlay)
+        dev_loader = OfficialRoBERTaBatches(loaders["dev"], overlay)
+        test_loader = OfficialRoBERTaBatches(loaders["test"], overlay)
+        label_counts = representation_manifest["label_counts"]["train"]
+        counts = torch.tensor([int(label_counts["human"]), int(label_counts["bot"])], dtype=torch.float32)
+        manifest["representation_id"] = representation_manifest["representation_id"]
+        manifest["representation_manifest_sha256"] = representation_manifest["manifest_sha256"]
+        manifest["official_overlay_contract"] = overlay.contract
+        write_json(run_root / "run_manifest.json", manifest)
+    else:
+        train_batch = load_split(representation_root / "train.pt", input_dims, quality_dim)
+        dev_batch = load_split(representation_root / "dev.pt", input_dims, quality_dim)
+        test_batch = load_split(representation_root / "test.pt", input_dims, quality_dim)
+        train_loader = make_loader(train_batch, training["batch_size"], True, seed, training["num_workers"])
+        dev_loader = make_loader(dev_batch, training["evaluation_batch_size"], False, seed, training["num_workers"])
+        test_loader = make_loader(test_batch, training["evaluation_batch_size"], False, seed, training["num_workers"])
+        counts = torch.bincount(train_batch.labels, minlength=2).to(torch.float32)
     requested_device = training["device"]
     device = torch.device(requested_device if requested_device != "cuda" or torch.cuda.is_available() else "cpu")
     model = FIESL(input_dims=input_dims, quality_dim=quality_dim, **config["model"]).to(device)
-    counts = torch.bincount(train_batch.labels, minlength=2).to(torch.float32)
-    class_weights = train_batch.labels.numel() / (2 * counts.clamp_min(1))
+    class_weights = counts.sum() / (2 * counts.clamp_min(1))
     criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
     optimizer = torch.optim.AdamW(
         model.parameters(),
